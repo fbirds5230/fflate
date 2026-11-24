@@ -2673,12 +2673,14 @@ export class DecodeUTF8 {
  */
 export class EncodeUTF8 {
   private d: boolean;
+  private p: string;
   /**
    * Creates a UTF-8 decoding stream
    * @param cb The callback to call whenever data is encoded
    */
   constructor(cb?: FlateStreamHandler) {
     this.ondata = cb;
+    this.p = '';
   }
 
   /**
@@ -2689,6 +2691,10 @@ export class EncodeUTF8 {
   push(chunk: string, final?: boolean) {
     if (!this.ondata) err(5);
     if (this.d) err(4);
+    if (this.p) chunk = this.p + chunk;
+    const c = chunk.charCodeAt(chunk.length - 1);
+    this.p = !final && c > 55295 && c < 56320 ? chunk.slice(-1) : '';
+    if (this.p) chunk = chunk.slice(0, -1);
     this.ondata(strToU8(chunk), this.d = final || false);
   }
 
